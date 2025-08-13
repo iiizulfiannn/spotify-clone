@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Spotify Clone App</string>
+    <string name="txt_title_album">The greatest album of 2024</string>
+    <string name="txt_description_album">to You - Momo / Remastered</string>
+    <string name="txt_now_playing">Now Playing</string>
+    <string name="txt_now_playing_song">From Me to You - Mono Remastered</string>
+    <string name="txt_description">Washed Out</string>
+    <string name="list_song_title">List of the gratest album of 2024: %1$s Songs</string>
+    <string name="txt_song_name">Troubled Paradise</string>
+    <string name="txt_slayyer">Slayyter</string>
 </resources>
