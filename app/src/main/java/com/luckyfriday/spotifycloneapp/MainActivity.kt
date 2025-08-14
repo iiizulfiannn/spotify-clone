@@ -5,6 +5,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.luckyfriday.spotifycloneapp.databinding.ActivityMainBinding
@@ -24,9 +25,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun recyclerViewSetup() {
+        // attached item list
         mainBinding.rvListSong.apply {
             layoutManager = LinearLayoutManager(this@MainActivity, RecyclerView.VERTICAL, false)
             adapter = musicAdapter
         }
+
+        // drag drop position
+        val callback = ItemMoveCallback(musicAdapter)
+        ItemTouchHelper(callback).attachToRecyclerView(mainBinding.rvListSong)
     }
 }
