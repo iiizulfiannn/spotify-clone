@@ -1,7 +1,8 @@
-package com.luckyfriday.spotifycloneapp
+package com.luckyfriday.spotifycloneapp.model
 
 import android.os.Parcelable
 import androidx.annotation.RawRes
+import com.luckyfriday.spotifycloneapp.R
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
