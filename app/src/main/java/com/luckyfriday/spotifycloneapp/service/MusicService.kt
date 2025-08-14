@@ -9,6 +9,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import com.luckyfriday.spotifycloneapp.model.MusicModel
 import androidx.core.net.toUri
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.media3.common.C
 import androidx.media3.common.Player
 import kotlin.math.abs
@@ -23,6 +24,7 @@ class MusicService : Service() {
     private var selectedMusicPlayed: MusicModel? = null
     private var position: Int = -1
     private var isShuffleEnable: Boolean? = false
+    private var lastDuration: Long = 0
 
     override fun onCreate() {
         super.onCreate()
@@ -117,7 +119,7 @@ class MusicService : Service() {
 
                 Action.PAUSE_MODE -> {
                     // countdown timer cancel
-                    countDownTimer.cancel()
+                    countDownTimer?.cancel()
                     if (exoPlayer.isPlaying) {
                         exoPlayer.playWhenReady = false
                     }
@@ -151,6 +153,79 @@ class MusicService : Service() {
     }
 
     private fun startCountDown() {
+        countDownTimer = object : CountDownTimer(totalDuration, 1000) {
+            override fun onFinish() {
+                sendValueToActivity(
+                    progress = 100f,
+                    duration = "00:00",
+                    durationTotal = "00:00",
+                    title = selectedMusicPlayed?.title.orEmpty(),
+                    description = selectedMusicPlayed?.description.orEmpty()
+                )
+
+                stopMusic(position, 0)
+                if (isShuffleEnable == true) setRandomPlaylistPosition() else setNextPosition()
+                totalDuration = abs(exoPlayer.duration)
+                playMusic(position, exoPlayer.currentPosition)
+
+            }
+
+            private fun setNextPosition() {
+                if (position >= musicList.size - 1) {
+                    position = 0
+                } else {
+                    position++
+                }
+            }
+
+            private fun setRandomPlaylistPosition() {
+                position = (0..musicList.size).random()
+            }
+
+            override fun onTick(millisUntilFinished: Long) {
+                lastDuration = exoPlayer.currentPosition
+
+                val minutes = lastDuration / 60000
+                val seconds = (lastDuration % 60000) / 10000
+                val formattedTime = String.format("%02d:%02d", minutes, seconds)
+                val progress = ((lastDuration * 100) / totalDuration).toFloat()
+
+                val minutesTotal = totalDuration / 60000
+                val secondsTotal = (totalDuration % 60000) / 10000
+                val formattedTimeTotal = String.format("%02d:%02d", minutesTotal, secondsTotal)
+
+                //send activity
+                sendValueToActivity(
+                    progress,
+                    formattedTime,
+                    formattedTimeTotal,
+                    selectedMusicPlayed?.title.orEmpty(),
+                    selectedMusicPlayed?.description.orEmpty()
+                )
+
+                // start foreground on notification
+            }
+
+
+        }
+
+    }
+
+    private fun sendValueToActivity(
+        progress: Float,
+        duration: String,
+        durationTotal: String,
+        title: String,
+        description: String
+    ) {
+        val intent = Intent("musicBroadcast")
+        intent.putExtra(INTENT.PENDING_POSITION, position)
+        intent.putExtra(INTENT.PENDING_PROGRESS, position)
+        intent.putExtra(INTENT.PENDING_DURATION, duration)
+        intent.putExtra(INTENT.PENDING_DURATION_TOTAL, durationTotal)
+        intent.putExtra(INTENT.PENDING_TITLE, title)
+        intent.putExtra(INTENT.PENDING_DESCRIPTION, description)
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
     }
 
