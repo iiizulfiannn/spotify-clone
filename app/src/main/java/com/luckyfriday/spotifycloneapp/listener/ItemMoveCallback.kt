@@ -1,4 +1,4 @@
-package com.luckyfriday.spotifycloneapp
+package com.luckyfriday.spotifycloneapp.listener
 
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView

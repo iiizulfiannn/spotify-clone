@@ -3,7 +3,7 @@ package com.luckyfriday.spotifycloneapp.adapter
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.luckyfriday.spotifycloneapp.ItemMoveCallback
+import com.luckyfriday.spotifycloneapp.listener.ItemMoveCallback
 import com.luckyfriday.spotifycloneapp.databinding.ItemMusicBinding
 import com.luckyfriday.spotifycloneapp.model.MusicModel
 import java.util.Collections

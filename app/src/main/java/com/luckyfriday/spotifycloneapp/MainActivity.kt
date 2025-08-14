@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.luckyfriday.spotifycloneapp.adapter.MusicAdapter
 import com.luckyfriday.spotifycloneapp.databinding.ActivityMainBinding
+import com.luckyfriday.spotifycloneapp.listener.ItemMoveCallback
 import com.luckyfriday.spotifycloneapp.model.MusicModel
 
 class MainActivity : AppCompatActivity() {
