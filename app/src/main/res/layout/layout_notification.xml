@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="120dp"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/iv_notification_bg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:adjustViewBounds="true"
+        tools:src="@drawable/ic_icon_playing" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/iv_album"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/fading" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/iv_notification"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="10dp"
+        android:adjustViewBounds="true"
+        android:src="@drawable/ic_icon_playing" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_title_notification"
+        style="@style/TextAppearance.Compat.Notification.Title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/iv_notification"
+        android:layout_marginStart="4dp"
+        android:layout_toEndOf="@id/iv_notification"
+        android:ellipsize="end"
+        android:singleLine="true"
+        tools:text="@string/txt_now_playing" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_subtitle_notification"
+        style="@style/TextAppearance.Compat.Notification.Line2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_title_notification"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="5dp"
+        android:layout_toEndOf="@id/iv_notification"
+        android:ellipsize="end"
+        android:singleLine="true"
+        tools:text="@string/txt_now_playing" />
+
+    <ProgressBar
+        android:id="@+id/seekbar_notification"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="0dp"
+        android:layout_height="15dp"
+        android:layout_below="@id/iv_notification"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:max="100" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_timer_notification"
+        style="@style/TextAppearance.Compat.Notification.Line2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/seekbar_notification"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="10dp"
+        tools:text="00:00" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_timer_total_notification"
+        style="@style/TextAppearance.Compat.Notification.Line2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/seekbar_notification"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="10dp"
+        tools:text="00:00" />
+
+
+</RelativeLayout>
