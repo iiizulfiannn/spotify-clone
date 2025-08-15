@@ -42,6 +42,135 @@ class MainActivity : AppCompatActivity(), MusicListener {
         listener = this
         listMusic.addAll(MusicModel.getListMap())
         recyclerViewSetup()
+
+        mainBinding.tvTitleListSong.text =
+            getString(R.string.list_song_title, listMusic.size.toString())
+        mainBinding.layoutButtonHandle.btnPlay.setOnClickListener {
+            if (isPlaying) {
+                isPlaying = false
+                pauseMusic()
+            } else {
+                isPlaying = true
+                playMusic()
+            }
+            playButton()
+        }
+
+        mainBinding.musicPlayingNowFullScreen.layoutBtnDetailScreen.btnPlay.setOnClickListener {
+            if (isPlaying) pauseMusic() else playMusic()
+            playButton()
+        }
+
+        mainBinding.layoutButtonHandle.btnNext.setOnClickListener {
+            nextButtonListener()
+        }
+
+        mainBinding.musicPlayingNowFullScreen.layoutBtnDetailScreen.btnNext.setOnClickListener {
+            nextButtonListener()
+        }
+
+        mainBinding.layoutButtonHandle.btnPrevious.setOnClickListener {
+            previousButtonListener()
+        }
+
+        mainBinding.musicPlayingNowFullScreen.layoutBtnDetailScreen.btnPrevious.setOnClickListener {
+            previousButtonListener()
+        }
+
+        mainBinding.layoutButtonHandle.btnShuffle.setOnClickListener {
+            shuffleButtonListener()
+        }
+
+        mainBinding.musicPlayingNowFullScreen.layoutBtnDetailScreen.btnShuffle.setOnClickListener {
+            shuffleButtonListener()
+        }
+
+        mainBinding.layoutButtonHandle.btnRepeat.setOnClickListener {
+            repeatButtonListener()
+        }
+
+        mainBinding.musicPlayingNowFullScreen.layoutBtnDetailScreen.btnRepeat.setOnClickListener {
+            repeatButtonListener()
+        }
+    }
+
+    private fun repeatButtonListener() {
+        repeatMode = when (repeatMode) {
+            Player.REPEAT_MODE_OFF -> {
+                setRepeatType("ONE")
+                Player.REPEAT_MODE_ONE
+            }
+
+            Player.REPEAT_MODE_ONE -> {
+                setRepeatType("ALL")
+                Player.REPEAT_MODE_ALL
+            }
+
+            Player.REPEAT_MODE_ALL -> {
+                setRepeatType("OFF")
+                Player.REPEAT_MODE_OFF
+            }
+
+            else -> Player.REPEAT_MODE_OFF
+        }
+        notificationListener.onRepeat(this, repeatMode)
+    }
+
+    private fun setRepeatType(mode: String = "OFF") {
+        mainBinding.layoutButtonHandle.tvRepeatIndicator.text = mode
+        mainBinding.musicPlayingNowFullScreen.layoutBtnDetailScreen.tvRepeatIndicator.text = mode
+    }
+
+    private fun shuffleButtonListener() {
+        isShuffleEnable = !isShuffleEnable
+        notificationListener.onShuffle(this, isShuffleEnable)
+        updateShuffleButton()
+    }
+
+    private fun updateShuffleButton() {
+        val iconResource = if (isShuffleEnable) {
+            R.drawable.ic_shuffle_on
+        } else {
+            R.drawable.ic_shuffle_off
+        }
+        mainBinding.layoutButtonHandle.btnShuffle.setImageResource(iconResource)
+        mainBinding.musicPlayingNowFullScreen.layoutBtnDetailScreen.btnShuffle.setImageResource(
+            iconResource
+        )
+    }
+
+    private fun previousButtonListener() {
+        selectedMusicPlayed = if (currentPosition <= 0) {
+            currentPosition = listMusic.size - 1
+            listMusic[currentPosition]
+        } else {
+            currentPosition -= 1
+            listMusic[currentPosition]
+        }
+        musicAdapter.setSelectedMusic(selectedMusicPlayed)
+        showHideLinePlaying()
+        notificationListener.onRestart(this, currentPosition)
+    }
+
+    private fun nextButtonListener() {
+        selectedMusicPlayed = if (currentPosition >= listMusic.size - 1) {
+            currentPosition = 0
+            listMusic[currentPosition]
+        } else {
+            currentPosition += 1
+            listMusic[currentPosition]
+        }
+        musicAdapter.setSelectedMusic(selectedMusicPlayed)
+        showHideLinePlaying()
+        notificationListener.onRestart(this, currentPosition)
+    }
+
+    private fun playMusic() {
+        notificationListener.onPlay(this, currentPosition)
+    }
+
+    private fun pauseMusic() {
+        notificationListener.onPause(this)
     }
 
     private fun recyclerViewSetup() {
