@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:text="@string/txt_now_playing_song"
-        android:textColor="#1ED760"
+        android:textColor="@color/green_1ed760"
         app:layout_constraintStart_toEndOf="@id/iv_now_playing"
         app:layout_constraintTop_toTopOf="@id/iv_now_playing" />
 
