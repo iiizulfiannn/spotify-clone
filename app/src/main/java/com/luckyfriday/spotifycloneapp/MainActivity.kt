@@ -1,12 +1,16 @@
 package com.luckyfriday.spotifycloneapp
 
+import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.view.isVisible
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.media3.common.Player
@@ -49,8 +53,7 @@ class MainActivity : AppCompatActivity(), MusicListener {
         setContentView(mainBinding.root)
         listMusic.clear()
         listener = this
-        listMusic.addAll(MusicModel.getListMap())
-        recyclerViewSetup()
+        checkNotificationPermission()
 
         mainBinding.tvTitleListSong.text =
             getString(R.string.list_song_title, listMusic.size.toString())
@@ -113,6 +116,37 @@ class MainActivity : AppCompatActivity(), MusicListener {
         registerBroadcast()
 
         setSelectedValue()
+
+        listMusic.addAll(MusicModel.getListMap())
+        recyclerViewSetup()
+    }
+
+    private fun checkNotificationPermission(onGranted: () -> Unit = {}) {
+        if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) {
+            showDialogNotificationPermission(this)
+        } else {
+            onGranted()
+        }
+    }
+
+    private fun showDialogNotificationPermission(activity: Activity, onCancel: () -> Unit = {}) {
+        AlertDialog.Builder(activity)
+            .setTitle("Hi user!")
+            .setMessage("For better experience please enable notification permission on your device")
+            .setPositiveButton("Allow") { _, _ ->
+                openNotificationSettings(activity)
+            }
+            .setNegativeButton("Cancel") { _, _ ->
+                onCancel()
+            }
+            .show()
+    }
+
+    private fun openNotificationSettings(activity: Activity) {
+        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        intent.putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
+        activity.startActivity(intent)
     }
 
     private fun setSelectedValue() {
