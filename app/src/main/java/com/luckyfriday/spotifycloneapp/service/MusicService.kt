@@ -1,7 +1,10 @@
 package com.luckyfriday.spotifycloneapp.service
 
+import android.app.Notification
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.CountDownTimer
 import android.os.IBinder
@@ -12,6 +15,9 @@ import androidx.core.net.toUri
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.media3.common.C
 import androidx.media3.common.Player
+import com.luckyfriday.spotifycloneapp.loadImageNotification
+import com.luckyfriday.spotifycloneapp.notification.NotificationBuilders
+import com.luckyfriday.spotifycloneapp.service.MusicService.Action.NOTIFICATION_ID
 import kotlin.math.abs
 
 class MusicService : Service() {
@@ -25,6 +31,7 @@ class MusicService : Service() {
     private var position: Int = -1
     private var isShuffleEnable: Boolean? = false
     private var lastDuration: Long = 0
+    private var notification: Notification? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -65,6 +72,32 @@ class MusicService : Service() {
         exoPlayer.addListener(playerListener)
     }
 
+    private fun createNotification(
+        context: Context,
+        position: Int,
+        progress: Float = 0F,
+        title: String,
+        duration: String = "00:00",
+        description: String,
+        totalDuration: String = "00:00",
+        image: Bitmap
+    ): Notification {
+        return NotificationBuilders.showNotification(
+            context = context,
+            progress = progress,
+            title = title,
+            duration = duration,
+            descriptions = description,
+            totalDuration = totalDuration,
+            position = position,
+            image = image
+        )
+    }
+
+    private fun removeNotification() {
+        NotificationBuilders.cancel(this)
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val newPosition = intent?.getIntExtra(TAG.POSITION, 0)
         val isShuffle = intent?.getBooleanExtra(TAG.IS_SHUFFLE, false)
@@ -101,6 +134,7 @@ class MusicService : Service() {
                     exoPlayer.release()
 
                     // unregister if there is notification
+                    removeNotification()
 
                     // kill the service
                     killService()
@@ -125,6 +159,7 @@ class MusicService : Service() {
                     }
 
                     // remove notif
+                    removeNotification()
                 }
             }
         }
@@ -194,6 +229,24 @@ class MusicService : Service() {
                 val secondsTotal = (totalDuration % 60000) / 10000
                 val formattedTimeTotal = String.format("%02d:%02d", minutesTotal, secondsTotal)
 
+                if (selectedMusicPlayed?.title.isNullOrEmpty()) {
+                    removeNotification()
+                    killService()
+                } else {
+                    loadImageNotification(this@MusicService, selectedMusicPlayed?.imageCover.orEmpty()) {
+                        notification = createNotification(
+                            this@MusicService,
+                            progress = progress,
+                            position = position,
+                            duration = formattedTime,
+                            totalDuration = formattedTimeTotal,
+                            title = selectedMusicPlayed?.title.orEmpty(),
+                            description = selectedMusicPlayed?.description.orEmpty(),
+                            image = it
+                        )
+                    }
+                }
+
                 //send activity
                 sendValueToActivity(
                     progress,
@@ -204,10 +257,13 @@ class MusicService : Service() {
                 )
 
                 // start foreground on notification
+                startForeground(NOTIFICATION_ID, notification)
             }
 
 
         }
+
+        countDownTimer?.start()
 
     }
 
@@ -231,6 +287,13 @@ class MusicService : Service() {
 
     override fun onBind(p0: Intent?): IBinder? {
         TODO("Not yet implemented")
+    }
+
+    override fun onDestroy() {
+        selectedMusicPlayed = null
+        exoPlayer.release()
+        killService()
+        super.onDestroy()
     }
 
     object Action {
