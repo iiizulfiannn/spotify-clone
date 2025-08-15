@@ -1,4 +1,4 @@
-package com.luckyfriday.spotifycloneapp
+package com.luckyfriday.spotifycloneapp.notification
 
 import android.annotation.SuppressLint
 import android.app.Notification
@@ -10,13 +10,9 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
-import com.luckyfriday.spotifycloneapp.service.MusicService.Action.NOTIFICATION_ID
-import com.luckyfriday.spotifycloneapp.service.MusicService.INTENT.PENDING_DESCRIPTION
-import com.luckyfriday.spotifycloneapp.service.MusicService.INTENT.PENDING_DURATION
-import com.luckyfriday.spotifycloneapp.service.MusicService.INTENT.PENDING_DURATION_TOTAL
-import com.luckyfriday.spotifycloneapp.service.MusicService.INTENT.PENDING_POSITION
-import com.luckyfriday.spotifycloneapp.service.MusicService.INTENT.PENDING_PROGRESS
-import com.luckyfriday.spotifycloneapp.service.MusicService.INTENT.PENDING_TITLE
+import com.luckyfriday.spotifycloneapp.MainActivity
+import com.luckyfriday.spotifycloneapp.R
+import com.luckyfriday.spotifycloneapp.service.MusicService
 
 object NotificationBuilders {
 
@@ -47,17 +43,17 @@ object NotificationBuilders {
 
         notificationManager.createNotificationChannel(notificationChannel)
         val pendingIntent = Intent(context, MainActivity::class.java)
-        pendingIntent.putExtra(PENDING_PROGRESS, progress)
-        pendingIntent.putExtra(PENDING_DURATION, duration)
-        pendingIntent.putExtra(PENDING_DURATION_TOTAL, totalDuration)
-        pendingIntent.putExtra(PENDING_TITLE, title)
-        pendingIntent.putExtra(PENDING_DESCRIPTION, descriptions)
-        pendingIntent.putExtra(PENDING_POSITION, position)
+        pendingIntent.putExtra(MusicService.INTENT.PENDING_PROGRESS, progress)
+        pendingIntent.putExtra(MusicService.INTENT.PENDING_DURATION, duration)
+        pendingIntent.putExtra(MusicService.INTENT.PENDING_DURATION_TOTAL, totalDuration)
+        pendingIntent.putExtra(MusicService.INTENT.PENDING_TITLE, title)
+        pendingIntent.putExtra(MusicService.INTENT.PENDING_DESCRIPTION, descriptions)
+        pendingIntent.putExtra(MusicService.INTENT.PENDING_POSITION, position)
         pendingIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
 
         val contentIntent = PendingIntent.getActivity(
             context,
-            NOTIFICATION_ID,
+            MusicService.Action.NOTIFICATION_ID,
             pendingIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -91,7 +87,7 @@ object NotificationBuilders {
             .setAutoCancel(true)
             .build()
 
-        notificationManager.notify(NOTIFICATION_ID, customNotification)
+        notificationManager.notify(MusicService.Action.NOTIFICATION_ID, customNotification)
 
         return customNotification
     }
@@ -100,6 +96,6 @@ object NotificationBuilders {
     fun cancel(context: Context) {
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.cancel(NOTIFICATION_ID)
+        notificationManager.cancel(MusicService.Action.NOTIFICATION_ID)
     }
 }
