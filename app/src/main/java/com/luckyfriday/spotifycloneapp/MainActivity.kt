@@ -52,6 +52,8 @@ class MainActivity : AppCompatActivity(), MusicListener {
         mainBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(mainBinding.root)
         listMusic.clear()
+        listMusic.addAll(MusicModel.getListMap())
+
         listener = this
         checkNotificationPermission()
 
@@ -70,6 +72,7 @@ class MainActivity : AppCompatActivity(), MusicListener {
 
         mainBinding.musicPlayingNowFullScreen.layoutBtnDetailScreen.btnPlay.setOnClickListener {
             if (isPlaying) pauseMusic() else playMusic()
+            isPlaying = !isPlaying
             playButton()
         }
 
@@ -117,7 +120,6 @@ class MainActivity : AppCompatActivity(), MusicListener {
 
         setSelectedValue()
 
-        listMusic.addAll(MusicModel.getListMap())
         recyclerViewSetup()
     }
 
@@ -340,26 +342,27 @@ class MainActivity : AppCompatActivity(), MusicListener {
     }
 
     private fun showMusicPlayer() {
-        mainBinding.layoutButtonHandle.apply {
-            root.isVisible = true
-        }
+        mainBinding.layoutButtonHandle.root.isVisible = true
     }
 
     private fun showHideLinePlaying() {
         // now playing
-        mainBinding.layoutMusicNowPlaying.apply {
-            root.isVisible = true
-            tvTitleNowPlaying.text = selectedMusicPlayed?.title
-            tvDescriptionNowPlaying.text = selectedMusicPlayed?.description
-            ivNowPlaying.loadImage(this@MainActivity, selectedMusicPlayed?.imageCover.orEmpty())
-        }
-
-        // fullscreen
-        mainBinding.musicPlayingNowFullScreen.apply {
-            tvTitleSong.text = selectedMusicPlayed?.title
-            tvDescriptionSong.text = selectedMusicPlayed?.description
-            ivAlbumCover.loadImage(this@MainActivity, selectedMusicPlayed?.imageCover.orEmpty())
-        }
+        mainBinding.layoutMusicNowPlaying.root.isVisible = true
+        mainBinding.layoutMusicNowPlaying.tvTitleNowPlaying.text = selectedMusicPlayed?.title
+        mainBinding.layoutMusicNowPlaying.tvDescriptionNowPlaying.text =
+            selectedMusicPlayed?.description
+        mainBinding.layoutMusicNowPlaying.ivNowPlaying.loadImage(
+            this,
+            selectedMusicPlayed?.imageCover.orEmpty()
+        )
+        //full screen
+        mainBinding.musicPlayingNowFullScreen.tvTitleSong.text = selectedMusicPlayed?.title
+        mainBinding.musicPlayingNowFullScreen.tvDescriptionSong.text =
+            selectedMusicPlayed?.description
+        mainBinding.musicPlayingNowFullScreen.ivAlbumCover.loadImage(
+            this,
+            selectedMusicPlayed?.imageCover.orEmpty()
+        )
     }
 
     private fun restartMusic() {
@@ -370,7 +373,6 @@ class MainActivity : AppCompatActivity(), MusicListener {
         notificationListener.onStop(this)
         unregisterBroadcast()
         super.onDestroy()
-
     }
 
     private fun unregisterBroadcast() {

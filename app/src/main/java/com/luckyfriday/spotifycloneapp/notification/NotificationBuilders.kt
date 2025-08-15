@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import com.luckyfriday.spotifycloneapp.MainActivity
 import com.luckyfriday.spotifycloneapp.R
 import com.luckyfriday.spotifycloneapp.service.MusicService
+import com.luckyfriday.spotifycloneapp.service.MusicService.Action.NOTIFICATION_ID
 
 object NotificationBuilders {
 
@@ -24,7 +25,7 @@ object NotificationBuilders {
         title: String,
         duration: String,
         descriptions: String,
-        totalDuration: String,
+        durationTotal: String,
         position: Int,
         image: Bitmap
     ): Notification {
@@ -42,10 +43,11 @@ object NotificationBuilders {
         }
 
         notificationManager.createNotificationChannel(notificationChannel)
+
         val pendingIntent = Intent(context, MainActivity::class.java)
         pendingIntent.putExtra(MusicService.INTENT.PENDING_PROGRESS, progress)
         pendingIntent.putExtra(MusicService.INTENT.PENDING_DURATION, duration)
-        pendingIntent.putExtra(MusicService.INTENT.PENDING_DURATION_TOTAL, totalDuration)
+        pendingIntent.putExtra(MusicService.INTENT.PENDING_DURATION_TOTAL, durationTotal)
         pendingIntent.putExtra(MusicService.INTENT.PENDING_TITLE, title)
         pendingIntent.putExtra(MusicService.INTENT.PENDING_DESCRIPTION, descriptions)
         pendingIntent.putExtra(MusicService.INTENT.PENDING_POSITION, position)
@@ -53,7 +55,7 @@ object NotificationBuilders {
 
         val contentIntent = PendingIntent.getActivity(
             context,
-            MusicService.Action.NOTIFICATION_ID,
+            NOTIFICATION_ID,
             pendingIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -61,6 +63,7 @@ object NotificationBuilders {
         val notificationLayout =
             RemoteViews(context.packageName, R.layout.layout_notification).apply {
                 setTextViewText(R.id.tv_title_notification, title)
+                setTextViewText(R.id.tv_subtitle_notification, descriptions)
                 setTextViewText(R.id.tv_timer_notification, duration)
                 setProgressBar(R.id.seekbar_notification, 100, progress.toInt(), false)
                 setImageViewBitmap(R.id.iv_notification, image)
@@ -87,7 +90,7 @@ object NotificationBuilders {
             .setAutoCancel(true)
             .build()
 
-        notificationManager.notify(MusicService.Action.NOTIFICATION_ID, customNotification)
+        notificationManager.notify(NOTIFICATION_ID, customNotification)
 
         return customNotification
     }
@@ -96,6 +99,6 @@ object NotificationBuilders {
     fun cancel(context: Context) {
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.cancel(MusicService.Action.NOTIFICATION_ID)
+        notificationManager.cancel(NOTIFICATION_ID)
     }
 }

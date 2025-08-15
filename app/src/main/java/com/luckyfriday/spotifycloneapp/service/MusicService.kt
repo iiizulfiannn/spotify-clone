@@ -5,7 +5,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.net.Uri
 import android.os.CountDownTimer
 import android.os.IBinder
 import androidx.media3.common.MediaItem
@@ -58,13 +57,13 @@ class MusicService : Service() {
                         val duration = exoPlayer.duration
                         if (duration != C.TIME_UNSET && currentState == Action.RESTART_MODE) {
                             totalDuration = duration
+                            playMusic(position, exoPlayer.currentPosition)
                         }
-                        playMusic(position, exoPlayer.currentPosition)
                     }
 
                     Player.STATE_ENDED -> {}
                     Player.STATE_IDLE -> {}
-
+                    Player.STATE_BUFFERING -> {}
                 }
             }
         }
@@ -79,7 +78,7 @@ class MusicService : Service() {
         title: String,
         duration: String = "00:00",
         description: String,
-        totalDuration: String = "00:00",
+        durationTotal: String = "00:00",
         image: Bitmap
     ): Notification {
         return NotificationBuilders.showNotification(
@@ -88,7 +87,7 @@ class MusicService : Service() {
             title = title,
             duration = duration,
             descriptions = description,
-            totalDuration = totalDuration,
+            durationTotal = durationTotal,
             position = position,
             image = image
         )
@@ -107,6 +106,9 @@ class MusicService : Service() {
             currentState = intent.getStringExtra(TAG.ACTION) ?: ""
             when (currentState) {
                 Action.CHANGE_POSITION -> {
+                    if (newPosition != null) {
+                        position = newPosition
+                    }
                     musicList.clear()
                     musicList.addAll(newList?.toList() ?: listOf())
                 }
@@ -125,7 +127,8 @@ class MusicService : Service() {
                     }
 
                     // stop music
-                    stopMusic(position, exoPlayer.currentPosition)
+//                    stopMusic(position, exoPlayer.currentPosition)
+                    stopMusic(position, 0)
                     val dataMusic = musicList[position]
                     selectedMusicPlayed = dataMusic
                 }
@@ -189,6 +192,51 @@ class MusicService : Service() {
 
     private fun startCountDown() {
         countDownTimer = object : CountDownTimer(totalDuration, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                lastDuration = exoPlayer.currentPosition
+
+                val minutes = lastDuration / 60000
+                val seconds = (lastDuration % 60000) / 1000
+                val formattedTime = String.format("%02d:%02d", minutes, seconds)
+                val progress = ((lastDuration * 100) / totalDuration).toFloat()
+
+                val minutesTotal = totalDuration / 60000
+                val secondsTotal = (totalDuration % 60000) / 1000
+                val formattedTimeTotal = String.format("%02d:%02d", minutesTotal, secondsTotal)
+
+                if (selectedMusicPlayed?.title.isNullOrEmpty()) {
+                    removeNotification()
+                    killService()
+                } else {
+                    loadImageNotification(
+                        this@MusicService,
+                        selectedMusicPlayed?.imageCover.orEmpty()
+                    ) {
+                        notification = createNotification(
+                            this@MusicService,
+                            progress = progress,
+                            position = position,
+                            duration = formattedTime,
+                            durationTotal = formattedTimeTotal,
+                            title = selectedMusicPlayed?.title.orEmpty(),
+                            description = selectedMusicPlayed?.description.orEmpty(),
+                            image = it
+                        )
+                        //send activity
+                        sendValueToActivity(
+                            progress,
+                            formattedTime,
+                            formattedTimeTotal,
+                            selectedMusicPlayed?.title.orEmpty(),
+                            selectedMusicPlayed?.description.orEmpty()
+                        )
+
+                        // start foreground on notification
+                        startForeground(NOTIFICATION_ID, notification)
+                    }
+                }
+            }
+
             override fun onFinish() {
                 sendValueToActivity(
                     progress = 100f,
@@ -205,66 +253,21 @@ class MusicService : Service() {
 
             }
 
-            private fun setNextPosition() {
-                if (position >= musicList.size - 1) {
-                    position = 0
-                } else {
-                    position++
-                }
-            }
-
-            private fun setRandomPlaylistPosition() {
-                position = (0..musicList.size).random()
-            }
-
-            override fun onTick(millisUntilFinished: Long) {
-                lastDuration = exoPlayer.currentPosition
-
-                val minutes = lastDuration / 60000
-                val seconds = (lastDuration % 60000) / 10000
-                val formattedTime = String.format("%02d:%02d", minutes, seconds)
-                val progress = ((lastDuration * 100) / totalDuration).toFloat()
-
-                val minutesTotal = totalDuration / 60000
-                val secondsTotal = (totalDuration % 60000) / 10000
-                val formattedTimeTotal = String.format("%02d:%02d", minutesTotal, secondsTotal)
-
-                if (selectedMusicPlayed?.title.isNullOrEmpty()) {
-                    removeNotification()
-                    killService()
-                } else {
-                    loadImageNotification(this@MusicService, selectedMusicPlayed?.imageCover.orEmpty()) {
-                        notification = createNotification(
-                            this@MusicService,
-                            progress = progress,
-                            position = position,
-                            duration = formattedTime,
-                            totalDuration = formattedTimeTotal,
-                            title = selectedMusicPlayed?.title.orEmpty(),
-                            description = selectedMusicPlayed?.description.orEmpty(),
-                            image = it
-                        )
-                    }
-                }
-
-                //send activity
-                sendValueToActivity(
-                    progress,
-                    formattedTime,
-                    formattedTimeTotal,
-                    selectedMusicPlayed?.title.orEmpty(),
-                    selectedMusicPlayed?.description.orEmpty()
-                )
-
-                // start foreground on notification
-                startForeground(NOTIFICATION_ID, notification)
-            }
-
-
         }
-
         countDownTimer?.start()
+    }
 
+
+    private fun setNextPosition() {
+        if (position >= musicList.size - 1) {
+            position = 0
+        } else {
+            position += 1
+        }
+    }
+
+    private fun setRandomPlaylistPosition() {
+        position = (0..musicList.size).random()
     }
 
     private fun sendValueToActivity(
@@ -276,17 +279,16 @@ class MusicService : Service() {
     ) {
         val intent = Intent("musicBroadcast")
         intent.putExtra(INTENT.PENDING_POSITION, position)
-        intent.putExtra(INTENT.PENDING_PROGRESS, position)
+        intent.putExtra(INTENT.PENDING_PROGRESS, progress)
         intent.putExtra(INTENT.PENDING_DURATION, duration)
         intent.putExtra(INTENT.PENDING_DURATION_TOTAL, durationTotal)
         intent.putExtra(INTENT.PENDING_TITLE, title)
         intent.putExtra(INTENT.PENDING_DESCRIPTION, description)
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
-
     }
 
     override fun onBind(p0: Intent?): IBinder? {
-        TODO("Not yet implemented")
+        return null
     }
 
     override fun onDestroy() {
