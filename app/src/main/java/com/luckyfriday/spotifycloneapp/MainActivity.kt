@@ -2,6 +2,7 @@ package com.luckyfriday.spotifycloneapp
 
 import android.content.BroadcastReceiver
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.media3.common.Player
@@ -92,6 +93,24 @@ class MainActivity : AppCompatActivity(), MusicListener {
         mainBinding.musicPlayingNowFullScreen.layoutBtnDetailScreen.btnRepeat.setOnClickListener {
             repeatButtonListener()
         }
+
+        mainBinding.layoutMusicNowPlaying.root.setOnClickListener {
+            showFullScreenMusic()
+        }
+
+        mainBinding.musicPlayingNowFullScreen.ivArrow.setOnClickListener {
+            hideFullScreen()
+        }
+    }
+
+    private fun hideFullScreen() {
+        mainBinding.musicPlayingNowFullScreen.root.visibility = View.GONE
+        mainBinding.layoutChooseSong.visibility = View.VISIBLE
+    }
+
+    private fun showFullScreenMusic() {
+        mainBinding.musicPlayingNowFullScreen.root.visibility = View.VISIBLE
+        mainBinding.layoutChooseSong.visibility = View.GONE
     }
 
     private fun repeatButtonListener() {
