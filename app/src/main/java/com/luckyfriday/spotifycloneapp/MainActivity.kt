@@ -1,10 +1,14 @@
 package com.luckyfriday.spotifycloneapp
 
 import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.media3.common.Player
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,6 +20,10 @@ import com.luckyfriday.spotifycloneapp.listener.MusicActionServiceListener
 import com.luckyfriday.spotifycloneapp.listener.MusicListener
 import com.luckyfriday.spotifycloneapp.model.MusicModel
 import com.luckyfriday.spotifycloneapp.notification.NotificationReceiver
+import com.luckyfriday.spotifycloneapp.service.MusicService.INTENT.PENDING_DURATION
+import com.luckyfriday.spotifycloneapp.service.MusicService.INTENT.PENDING_DURATION_TOTAL
+import com.luckyfriday.spotifycloneapp.service.MusicService.INTENT.PENDING_POSITION
+import com.luckyfriday.spotifycloneapp.service.MusicService.INTENT.PENDING_PROGRESS
 
 class MainActivity : AppCompatActivity(), MusicListener {
     private lateinit var listener: MusicListener
@@ -101,6 +109,65 @@ class MainActivity : AppCompatActivity(), MusicListener {
         mainBinding.musicPlayingNowFullScreen.ivArrow.setOnClickListener {
             hideFullScreen()
         }
+
+        registerBroadcast()
+
+        setSelectedValue()
+    }
+
+    private fun setSelectedValue() {
+        currentPosition = intent?.getIntExtra(PENDING_POSITION, -1) ?: -1
+        progress = intent?.getFloatExtra(PENDING_PROGRESS, 0f) ?: 0f
+        duration = intent?.getStringExtra(PENDING_DURATION) ?: ""
+        durationTotal = intent?.getStringExtra(PENDING_DURATION_TOTAL) ?: ""
+
+        if (currentPosition == -1) return
+        selectedMusicPlayed = listMusic[currentPosition]
+        musicAdapter.setSelectedMusic(selectedMusicPlayed)
+        updateDurationAndProgress()
+        showHideLinePlaying()
+        showMusicPlayer()
+        showFullScreenMusic()
+    }
+
+    private fun registerBroadcast() {
+        dataFromService = object : BroadcastReceiver() {
+            override fun onReceive(p0: Context?, p1: Intent?) {
+                val bundle = intent?.extras
+                if (bundle != null) {
+                    if (bundle.containsKey(PENDING_POSITION)) {
+                        val oldPosition = bundle.getInt(PENDING_POSITION)
+                        if (currentPosition == oldPosition) return
+                        currentPosition = oldPosition
+                        selectedMusicPlayed = listMusic[currentPosition]
+                        musicAdapter.setSelectedMusic(selectedMusicPlayed)
+                    }
+                    if (bundle.containsKey(PENDING_PROGRESS)) {
+                        progress = bundle.getFloat(PENDING_PROGRESS)
+                        updateDurationAndProgress()
+                    }
+                    if (bundle.containsKey(PENDING_DURATION_TOTAL)) {
+                        durationTotal = bundle.getString(PENDING_DURATION_TOTAL) ?: ""
+                        updateDurationAndProgress()
+                    }
+                    if (bundle.containsKey(PENDING_DURATION)) {
+                        duration = bundle.getString(PENDING_DURATION) ?: ""
+                        updateDurationAndProgress()
+                    }
+
+                }
+            }
+        }
+        LocalBroadcastManager.getInstance(this)
+            .registerReceiver(dataFromService, IntentFilter("musicBroadcast"))
+
+    }
+
+    private fun updateDurationAndProgress() {
+        mainBinding.musicPlayingNowFullScreen.seekbar.progress = progress.toInt()
+        mainBinding.musicPlayingNowFullScreen.tvTimerCurrent.text = duration
+        mainBinding.musicPlayingNowFullScreen.tvTimerTotal.text = durationTotal
+
     }
 
     private fun hideFullScreen() {
@@ -202,6 +269,8 @@ class MainActivity : AppCompatActivity(), MusicListener {
         // drag drop position
         val callback = ItemMoveCallback(musicAdapter)
         ItemTouchHelper(callback).attachToRecyclerView(mainBinding.rvListSong)
+
+        musicAdapter.setSelectedMusic(selectedMusicPlayed)
     }
 
     override fun onClicked(music: MusicModel) {
@@ -261,5 +330,16 @@ class MainActivity : AppCompatActivity(), MusicListener {
 
     private fun restartMusic() {
         notificationListener.onRestart(this, currentPosition)
+    }
+
+    override fun onDestroy() {
+        notificationListener.onStop(this)
+        unregisterBroadcast()
+        super.onDestroy()
+
+    }
+
+    private fun unregisterBroadcast() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(dataFromService)
     }
 }
